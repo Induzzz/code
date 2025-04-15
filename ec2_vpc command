@@ -1,0 +1,106 @@
+import boto3
+import pprint
+import sys
+
+
+arguments = sys.argv
+var = arguments[1]
+def ec2_details():
+
+ ec2_dict={}
+ client=boto3.client('ec2',
+              aws_access_key_id="*******",
+              aws_secret_access_key="*******",
+              region_name="ap-south-1")   
+ response=client.describe_instances(InstanceIds=['i-049035222a179996b','i-047b088c37d1bf021'])
+ try:
+  for detail in response['Reservations']:
+
+    for instance in detail['Instances']:
+        
+        InstanceId=instance['InstanceId']
+        ImageId=instance['ImageId']
+        InstanceType=instance['InstanceType']
+        SubnetId=instance['SubnetId']
+        VpcId=instance['VpcId']
+        PrivateIpAddress=instance['PrivateIpAddress']
+        PublicIpAddress=instance['PublicIpAddress']
+        availZone=instance['Placement']['AvailabilityZone']
+
+        #value=f'{InstanceId} ,{ImageId},{InstanceType},{SubnetId},{VpcId},{PrivateIpAddress},{PublicIpAddress},{availZone}'
+       # print(value)
+       
+
+        for tag in instance['Tags']:
+            ec2_dict['ec2_Name']=tag['Value']
+            ec2_dict['InstanceId']=InstanceId
+            ec2_dict['ImageId']= ImageId
+            ec2_dict['InstanceType']=InstanceType
+            ec2_dict['SubnetId']=SubnetId
+            ec2_dict['VpcId']=VpcId
+            ec2_dict['PrivateIpAddress']=PrivateIpAddress
+            ec2_dict['PublicIpAddress']=PublicIpAddress
+            ec2_dict['availZone']=availZone
+
+        print(ec2_dict)
+        print()
+ 
+ except Exception as err:
+    print(err)
+
+def vpc():  
+
+ vpc_dict={}
+ Region_name="ap-south-1"  
+ client=boto3.client('ec2',
+              aws_access_key_id="**************",
+              aws_secret_access_key="***************",
+              region_name=Region_name)
+ response=client.describe_instances(InstanceIds=['i-049035222a179996b','i-047b088c37d1bf021'])
+
+ for detail in response['Reservations']:
+
+    for instance in detail['Instances']:
+       VpcId=instance['VpcId']
+       subnetId=instance['SubnetId']
+
+       desvpc= client.describe_vpcs(VpcIds=[VpcId])
+       for vpc in desvpc['Vpcs']:
+         tags=vpc['Tags']
+         VPCidrBlock=vpc['CidrBlock']  
+         if "Tags" in vpc:
+             for tag in tags:
+                VPC_name= tag['Value']
+                #vpc_dict['VPC_name']=VPC_name
+
+                vpc_dict['VPC_name']=VPC_name
+
+                vpc_dict['VPC CidrBlock']=VPCidrBlock
+                vpc_dict['VpcId']=VpcId
+                vpc_dict["Region"]=Region_name
+                vpc_dict["subnetId"]=subnetId
+                #print(vpc_dict)
+                subnet= client.describe_subnets(SubnetIds=[subnetId])
+                #pprint.pprint(subnet)
+                for subnets in subnet["Subnets"]:
+                     CidrBlock=subnets['CidrBlock']
+                     AvailabilityZone=subnets['AvailabilityZone']
+                     vpc_dict["Subnet CidrBlock"]=CidrBlock
+                     vpc_dict["AvailabilityZone"]=AvailabilityZone
+                     print(vpc_dict)
+                     print()
+                    
+
+                     
+
+                    
+           
+if var.lower() == "ec2":
+          
+ ec2_details() 
+if var.lower() == "vpc":
+  vpc()
+
+
+
+
