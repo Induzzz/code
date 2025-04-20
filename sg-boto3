@@ -1,0 +1,36 @@
+#print the instance id if inbound rule is 0.0.0.0
+
+import boto3
+import pprint
+
+def ec2_details():
+
+ sg_dict={}
+ client=boto3.client('ec2',
+              aws_access_key_id="*********",
+              aws_secret_access_key="************",
+              region_name="ap-south-1")   
+ response=client.describe_instances()
+ for detail in response['Reservations']:
+   for instance in detail['Instances']:
+       InstanceId=instance['InstanceId']
+
+       secgroup=instance['SecurityGroups'] 
+       for sgroup in secgroup:
+           sgroupid= sgroup['GroupId']
+           sgresponse=client.describe_security_groups(GroupIds=[sgroupid])
+           
+           for SecurityGroup in sgresponse['SecurityGroups']:
+             ippermi= SecurityGroup['IpPermissions']
+             for ipdetails in ippermi:
+                 for inbound in ipdetails['IpRanges']:
+                   if  inbound['CidrIp']=='0.0.0.0/0':
+                       sg_dict["Instance id"]= InstanceId
+                       sg_dict["Inbound rule"]=inbound['CidrIp']
+                       pprint.pprint(sg_dict)
+      
+                   
+
+   
+                            
+ec2_details() 
